@@ -1,0 +1,9 @@
+keycloak:
+  ingress:
+    enabled: true
+    hosts:
+    - keycloak.portal-local
+    tls:
+    - hosts:
+        - keycloak.portal-local
+      secretName: tls-keycloak

@@ -1,9 +1,10 @@
 export HOSTFILE ?= '/etc/hosts'
-export HOSTLINE ?= "127.0.0.1 local.dubber.io portal-local s3.portal-local dashboard.portal-local kibana-portal-local jmeter.portal-local"
+export HOSTLINE ?= "127.0.0.1 local.dubber.io portal-local s3.portal-local dashboard.portal-local kibana-portal-local jmeter.portal-local jmeterreport.portal-local"
 
 all: help
 
 help: 
+	@echo "deploy-tiller							- creates tiller server in the cluster"	
 	@echo "deploy-ingress							- creates an ingress controller"
 	@echo "deploy-users								- creates an admin user"
 	@echo "setup-hostfile							- adds entries in /etc/hosts pointing at the local cluster"
@@ -13,6 +14,10 @@ help:
 	@echo "clean-users"
 	@echo "clean-dashboard"
 	@echo "clean-ingress"
+	@echo "clean-minio"
+
+deploy-tiller:
+	helm init
 
 deploy-ingress:
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml
@@ -25,11 +30,12 @@ deploy-users:
 
 deploy-dashboard:
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.1/aio/deploy/recommended.yaml
-	kubectl apply -f dashboard/dashboard-ingress.yml -n kubernetes-dashboard
+	helm install bitnami/metrics-server -f dashboard/metrics-server-values.yaml --name metrics-server --namespace kube-system
+	kubectl apply -f dashboard/dashboard-ingress.yaml -n kubernetes-dashboard
 
 deploy-minio:
 	kubectl apply -f backup/velero-v1.3.2-darwin-amd64/examples/minio/00-minio-deployment.yaml
-	kubectl apply -f backup/minio-ingress.yml -n velero
+	kubectl apply -f backup/minio-ingress.yaml -n velero
 
 deploy-backup:
 	velero install \
@@ -44,11 +50,11 @@ clean-users:
 
 clean-dashboard:
 	kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.1/aio/deploy/recommended.yaml
-	kubectl delete -f dashboard/dashboard-ingress.yml -n kubernetes-dashboard
+	kubectl delete -f dashboard/dashboard-ingress.yaml -n kubernetes-dashboard
 
 clean-ingress:
 	kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml
 
 clean-minio:
 	kubectl delete -f backup/velero-v1.3.2-darwin-amd64/examples/minio/00-minio-deployment.yaml
-	kubectl delete -f backup/minio-ingress.yml -n velero
+	kubectl delete -f backup/minio-ingress.yaml -n velero

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: jenkins-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+    - hosts:
+      - jenkins.portal-local
+      secretName: jenkins-tls-secret
+  rules:
+  - host: jenkins.portal-local
+    http:
+      paths:
+        - path:
+          backend:
+            serviceName: jenkins
+            servicePort: 8080
